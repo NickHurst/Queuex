@@ -100,6 +100,22 @@ this.$store.dispatch("queue/register", { name: "tmp", prioritized: true });
 this.$store.dispatch("queue/unregister", { name: "tmp" });
 ```
 
+Enqueuing something will return a Promise that gets resolved when that item
+is dequeued, this could be used to implement a throttled api request queue:
+
+```js
+aysnc someAction({ commit, dispatch }, { params }) {
+  const request = () => fetch("/some/api", { params });
+  await dispatch("queue/requests/enqueue", { request }, { root: true });
+  
+  // the request has been dequeued so now it can be actually called
+  const data = await request();
+  commit("persist", { data });
+  
+  return data;
+};
+```
+
 You can also subscribe to a queue to get notified when something has
 been enqueued and/or dequeued.
 
