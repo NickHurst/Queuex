@@ -165,57 +165,65 @@ been enqueued and/or dequeued.
 ```js
 this.$store.dispatch("queue/foo/subscribe", {
   mutation: "enqueue",
-  handler: (val) => console.log(`${val} enqueued`),
+  handler: payload => console.log(`${payload} enqueued`),
 });
 
 this.$store.dispatch("queue/foo/enqueue", { item: "foo" });
-// console: "foo enqueued"
+// console: "{ item: 'foo' } enqueued"
 
 // or you can subscribe to dequeues
 this.$store.dispatch("queue/foo/subscribe", {
   mutation: "dequeue",
-  handler: (val) => console.log(`${val} dequeued`),
+  handler: payload => console.log(`${payload} dequeued`),
 });
 
 this.$store.dispatch("queue/foo/dequeue");
-// console: "foo dequeued"
+// console: "{ item: 'foo' } dequeued"
 ```
 
 ### Component Plugin (optional)
 
 The component plugin can be added as well which will add the `$queue`
-property (this is just a proxy to the queue namespace on `$store`):
+property. This is just a proxy to the queue namespace on `$store.state`
+with `enqueue` & `dequeue` methods added that are just aliases of the
+actions:
 
 ```js
 Vue.use(Queuex);
 
-// then in a component
-// get the global queue and enqueue/dequeu items
-this.$queue; // []
-this.$queue.enqueue({ item: { foo: "bar" } });
-this.$queue; // [{ foo: "bar" }]
-this.$queue.dequeue(); // { foo: "bar" }
-this.$queue; // []
+// then in some component
+export default {
+  // omitted...
+  created() {
+    // get the global queue and enqueue/dequeu items
+    this.$queue; // []
+    // same as store.dispatch("queue/enqueue", { item: { foo: "bar" } })
+    this.$queue.enqueue({ item: "foo" }); // Promise
+    this.$queue; // ["foo"]
+    this.$queue.dequeue(); // "foo"
+    this.$queue; // []
 
-// named queue
-this.$queue.foo; // []
-this.$queue.foo.enqueue({ item: { foo: "bar" } });
-this.$queue.foo; // [{ foo: "bar" }]
-this.$queue.foo.dequeue() // { foo: "bar" }
-this.$queue.foo; // []
+    // named queue
+    this.$queue.foo; // []
+    this.$queue.foo.enqueue({ item: "foo" }); // Promise
+    this.$queue.foo; // ["foo"]
+    this.$queue.foo.dequeue() // "foo"
+    this.$queue.foo; // []
 
-// priority queue
-this.$queue.bar;
-this.$queue.bar.enqueue({ item: "default" }); // default priority
-this.$queue.bar; // ["default"]
-this.$queue.bar.enqueue({ item: "high", priority: "high" } });
-this.$queue.bar; // ["high", "default"]
-this.$queue.bar.enqueue({ item: "low", priority: "low" });
-this.$queue.bar; // ["high", "default", "low"]
-this.$queue.bar.dequeue(); // "high"
-this.$queue.bar; // ["default", "low"]
-this.$queue.bar.dequeue(); // "default"
-this.$queue.bar; // ["low"]
-this.$queue.bar.dequeue(); // "low"
-this.$queue.bar; // []
+    // priority queue
+    this.$queue.bar; // []
+    this.$queue.bar.enqueue({ item: "default" }); // Promise
+    this.$queue.bar; // ["default"]
+    this.$queue.bar.enqueue({ item: "high", priority: "high" }); // Promise
+    this.$queue.bar; // ["high", "default"]
+    this.$queue.bar.enqueue({ item: "low", priority: "low" }); // Promise
+    this.$queue.bar; // ["high", "default", "low"]
+    this.$queue.bar.dequeue(); // "high"
+    this.$queue.bar; // ["default", "low"]
+    this.$queue.bar.dequeue(); // "default"
+    this.$queue.bar; // ["low"]
+    this.$queue.bar.dequeue(); // "low"
+    this.$queue.bar; // []
+  },
+};
 ```
