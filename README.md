@@ -3,10 +3,9 @@
 ## If you came across this don't use it because I only spent 1.5 days making it
 
 A Vuex plugin for creating store modules that function as queues. Currently
-supports one global queue (can be disabled), the ability to create named queues
+supports one global (root) queue (can be disabled), the ability to create named queues
 (seperate namespaced modules), as well as priority queues with configurable
-priorities. You can also subscribe to a queue to get notified when something has
-been enqueued and/or dequeued.
+priorities.
 
 Basic Usage (as of right now):
 
@@ -44,8 +43,9 @@ The stores state tree would then look like this:
 ```js
 {
   queue: {
-    queues: {}, // queue module path registry
-    global: {
+    // queue module path registry
+    queues: { foo: "queue/foo", bar: "queue/bar", baz: "queue/baz", },
+    root: {
       queue: [],
     },
     foo: {
@@ -81,6 +81,45 @@ The stores state tree would then look like this:
     },
   }
 }
+```
+
+Queues don't have to registered when you initialize the plugin, and can be
+registered/destroyed at anypoint by invoking the `register/unregister` actions on the root
+queuex module:
+
+```js
+// add the plugin without any queues (not even the global queue)
+export default new Vuex.Store({
+  plugins: [new Queuex.Store()],
+});
+
+// then is some part of the app where you'll need a queue
+this.$store.dispatch("queue/register", { name: "tmp", prioritized: true });
+// then do some processing with it, and when done you can remove the
+// queue module entirely
+this.$store.dispatch("queue/unregister", { name: "tmp" });
+```
+
+You can also subscribe to a queue to get notified when something has
+been enqueued and/or dequeued.
+
+```js
+this.$store.dispatch("queue/foo/subscribe", {
+  mutation: "enqueue",
+  handler: (val) => console.log(`${val} enqueued`),
+});
+
+this.$store.dispatch("queue/foo/enqueue", "foo");
+// console: "foo enqueued"
+
+// or you can subscribe to dequeues
+this.$store.dispatch("queue/foo/subscribe", {
+  mutation: "dequeue",
+  handler: (val) => console.log(`${val} dequeued`),
+});
+
+this.$store.dispatch("queue/foo/dequeue");
+// console: "foo dequeued"
 ```
 
 And the Vue plugin can be added as well (adds a `$queue` property on components):
