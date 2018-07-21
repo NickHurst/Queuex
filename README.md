@@ -55,7 +55,7 @@ The stores state tree would then look like this:
       queues: ["high", "default", "low"],
       defaultQueue: "default",
       // these are the same as regular queue modules
-      // except will get pulled by priority by root priority queue
+      // except will get pulled by priority by parent module (bar)
       high: {
         queue: [],
       },
