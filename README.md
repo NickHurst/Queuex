@@ -75,7 +75,7 @@ The stores state tree would then look like this:
         queue: [],
       },
     },
-    bar: {
+    baz: {
       queues: ["a", "b", "c"],
       defaultQueue: "c",
       a: {
@@ -124,7 +124,7 @@ this.$store.dispatch("queue/dequeue"); // { foo: true }
 
 // if the queue is a priority queue you can pass a priority
 // otherwise whatever is set as the default will be used
-this.$store.dispatch("queue/enqueue", { item: { foo: true }, priority: "high" });
+this.$store.dispatch("queue/bar/enqueue", { item: { foo: true }, priority: "high" });
 
 // you can also use the mapActions helpers too
 { ...mapActions("queue/foo", { enqueueFoo: "enqueue" }) }
