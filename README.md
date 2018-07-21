@@ -45,6 +45,10 @@ The stores state tree would then look like this:
   queue: {
     // queue module path registry
     queues: { foo: "queue/foo", bar: "queue/bar", baz: "queue/baz", },
+    // the global or root queue, even though the module is namespaced
+    // it's actions/getters/state are proxied by the actual root module
+    // this queue can't be removed and will be created by default --
+    // passing { rootQueue: false } to the Queuex.Store options will disable it
     root: {
       queue: [],
     },
