@@ -1,11 +1,13 @@
 # Queuex
 
-## If you came across this don't use it because I only spent 1.5 days making it
-
 A Vuex plugin for creating store modules that function as queues. Currently
 supports one global (root) queue (can be disabled), the ability to create named queues
 (seperate namespaced modules), as well as priority queues with configurable
 priorities.
+
+**If you came across this and for some reason want to start using it -- don't.
+It technically "works", but this is mostly just a PoC and is but still early in
+(slow) development and these docs aren't likely 100% accurate.**
 
 Basic Usage (as of right now):
 
