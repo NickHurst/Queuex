@@ -1,37 +1,39 @@
 # Queuex
 
 A Vuex plugin for creating store modules that function as queues. Currently
-supports one global (root) queue (can be disabled), the ability to create named queues
-(seperate namespaced modules), as well as priority queues with configurable
-priorities.
+supports one global (or root) queue (can be disabled), the ability to
+create named queues (seperate namespaced modules), as well as priority queues
+with configurable priorities.
+
+## Warning
 
 **If you came across this and for some reason want to start using it -- don't.
 It technically "works" in the current state, but this is mostly just a PoC and
 is but still early in (a slow but sure) development and these docs aren't likely
 100% accurate.**
 
-Basic Usage (as of right now):
+### Getting Started
 
 ```js
 // store.js
-import Vue from 'vue';
-import Vuex from 'vuex';
-import Queuex from 'queuex';
+import Vue from "vue";
+import Vuex from "vuex";
+import Queuex from "queuex";
 
 Vue.use(Vuex);
 
 const queue = new Queuex.Store({
   queues: [
-    { name: 'foo' },
+    { name: "foo" },
     {
-      name: 'bar',
+      name: "bar",
       prioritized: true,
     },
     {
-      name: 'baz',
+      name: "baz",
       prioritized: true,
-      priorities: ['a', 'b', 'c'],
-      default: 'c',
+      priorities: ["a", "b", "c"],
+      default: "c",
     },
   ]
 });
@@ -90,6 +92,8 @@ The stores state tree would then look like this:
 }
 ```
 
+### Adding/Removing Queues
+
 Queues don't have to registered when you initialize the plugin, and can be
 registered/destroyed at anypoint by invoking the `register/unregister` actions on the root
 queuex module:
@@ -107,21 +111,53 @@ this.$store.dispatch("queue/register", { name: "tmp", prioritized: true });
 this.$store.dispatch("queue/unregister", { name: "tmp" });
 ```
 
-Enqueuing something will return a Promise that gets resolved when that item
-is dequeued, this could be used to implement a throttled api request queue:
+### Using the Queues
+
+Every queue module has the `enqueue` and `dequeue` actions, and the
+do exactly what you'd expect.
 
 ```js
-async someAction({ commit, dispatch }, { params }) {
-  const request = () => fetch("/some/api", { params });
-  await dispatch("queue/requests/enqueue", { request }, { root: true });
-  
-  // the request has been dequeued so now it can be actually called
-  const data = await request();
-  commit("persist", { data });
-  
-  return data;
-};
+// whatever you want to be enqueued must be set to the item
+// property of the payload
+this.$store.dispatch("queue/enqueue", { item: { foo: true } });
+this.$store.dispatch("queue/dequeue"); // { foo: true }
+
+// if the queue is a priority queue you can pass a priority
+// otherwise whatever is set as the default will be used
+this.$store.dispatch("queue/enqueue", { item: { foo: true }, priority: "high" });
+
+// you can also use the mapActions helpers too
+{ ...mapActions("queue/foo", { enqueueFoo: "enqueue" }) }
 ```
+
+Enqueuing something will return a Promise that gets resolved when that item
+is dequeued, this could be used for simple UI notifications, or even to
+possibly implement a throttled request queue:
+
+```js
+{
+  actions: {
+    async someAction({ commit, dispatch }, { params }) {
+      const request = () => fetch("/some/api", { params });
+      await dispatch("queue/requests/enqueue", { item: request, priority: "low" }, { root: true });
+
+      // the request has been dequeued so now it can be actually called
+      const data = await request();
+      commit("persist", { data });
+
+      return data;
+    },
+  },
+},
+
+// somewhere else
+const requestQueueThrottle = (store, throttle = 300) =>
+  new Promise(resolve => setTimeout(resolve, throttle))
+        .then(() => store.dispatch("queue/requests/dequeue"))
+        .then(() => requestQueueThrottle(store, throttle));
+```
+
+### Subscribing to Queue Events
 
 You can also subscribe to a queue to get notified when something has
 been enqueued and/or dequeued.
@@ -132,7 +168,7 @@ this.$store.dispatch("queue/foo/subscribe", {
   handler: (val) => console.log(`${val} enqueued`),
 });
 
-this.$store.dispatch("queue/foo/enqueue", "foo");
+this.$store.dispatch("queue/foo/enqueue", { item: "foo" });
 // console: "foo enqueued"
 
 // or you can subscribe to dequeues
@@ -145,8 +181,10 @@ this.$store.dispatch("queue/foo/dequeue");
 // console: "foo dequeued"
 ```
 
-And the Vue plugin can be added as well which will add the `$queue`
-property on components (this is just a proxy to the queue namespace on `$store`):
+### Component Plugin (optional)
+
+The component plugin can be added as well which will add the `$queue`
+property (this is just a proxy to the queue namespace on `$store`):
 
 ```js
 Vue.use(Queuex);
@@ -154,39 +192,30 @@ Vue.use(Queuex);
 // then in a component
 // get the global queue and enqueue/dequeu items
 this.$queue; // []
-this.$queue.enqueue({ foo: "bar" });
+this.$queue.enqueue({ item: { foo: "bar" } });
 this.$queue; // [{ foo: "bar" }]
 this.$queue.dequeue(); // { foo: "bar" }
 this.$queue; // []
 
 // named queue
 this.$queue.foo; // []
-this.$queue.foo.enqueue({ foo: "bar" });
+this.$queue.foo.enqueue({ item: { foo: "bar" } });
 this.$queue.foo; // [{ foo: "bar" }]
 this.$queue.foo.dequeue() // { foo: "bar" }
 this.$queue.foo; // []
 
 // priority queue
 this.$queue.bar;
-this.$queue.bar.enqueue({ foo: "bar" }); // default priority
-this.$queue.bar; // [{ foo: "bar" }]
-this.$queue.bar.enqueue({ bar: "baz", priority: "high" });
-this.$queue.bar; // [{ bar: "baz" }, { foo: "bar" }]
-this.$queue.bar.dequeue(); // { bar: "baz" }
-this.$queue.bar; // [{ foo: "bar" }]
-
-// enqueueing an item either from the $queue property or
-// through calling the action directly will return a promise that
-// will get resolved once it gets dequeued (with the item as the value it resovles with)
-Array(3).keys.forEach(i =>
-  this.$queue.enqueue(i).then(val => console.log(`dequeued ${val}`)),
-);
-
-this.$queue.bar.dequeue(); // 0
-this.$queue.bar.dequeue(); // 1
-this.$queue.bar.dequeue(); // 2
-// and now console will have output:
-// dequeued 0
-// dequeued 1
-// dequeued 2
+this.$queue.bar.enqueue({ item: "default" }); // default priority
+this.$queue.bar; // ["default"]
+this.$queue.bar.enqueue({ item: "high", priority: "high" } });
+this.$queue.bar; // ["high", "default"]
+this.$queue.bar.enqueue({ item: "low", priority: "low" });
+this.$queue.bar; // ["high", "default", "low"]
+this.$queue.bar.dequeue(); // "high"
+this.$queue.bar; // ["default", "low"]
+this.$queue.bar.dequeue(); // "default"
+this.$queue.bar; // ["low"]
+this.$queue.bar.dequeue(); // "low"
+this.$queue.bar; // []
 ```
