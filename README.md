@@ -39,6 +39,50 @@ export default new Vuex.Store({
 });
 ```
 
+The stores state tree would then look like this:
+
+```js
+{
+  queue: {
+    queues: {}, // queue module path registry
+    global: {
+      queue: [],
+    },
+    foo: {
+      queue: [],
+    },
+    bar: {
+      queues: ["high", "default", "low"],
+      defaultQueue: "default",
+      // these are the same as regular queue modules
+      // except will get pulled by priority by root priority queue
+      high: {
+        queue: [],
+      },
+      default: {
+        queue: [],
+      },
+      low: {
+        queue: [],
+      },
+    },
+    bar: {
+      queues: ["a", "b", "c"],
+      defaultQueue: "c",
+      a: {
+        queue: [],
+      },
+      b: {
+        queue: [],
+      },
+      c: {
+        queue: [],
+      },
+    },
+  }
+}
+```
+
 And the Vue plugin can be added as well (adds a `$queue` property on components):
 
 ```js
