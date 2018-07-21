@@ -104,7 +104,7 @@ Enqueuing something will return a Promise that gets resolved when that item
 is dequeued, this could be used to implement a throttled api request queue:
 
 ```js
-aysnc someAction({ commit, dispatch }, { params }) {
+async someAction({ commit, dispatch }, { params }) {
   const request = () => fetch("/some/api", { params });
   await dispatch("queue/requests/enqueue", { request }, { root: true });
   
