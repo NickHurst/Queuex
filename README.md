@@ -138,12 +138,13 @@ this.$store.dispatch("queue/foo/dequeue");
 // console: "foo dequeued"
 ```
 
-And the Vue plugin can be added as well (adds a `$queue` property on components):
+And the Vue plugin can be added as well which will add the `$queue`
+property on components (this is just a proxy to the queue namespace on `$store`):
 
 ```js
 Vue.use(Queuex);
 
-// in a component
+// then in a component
 // get the global queue and enqueue/dequeu items
 this.$queue; // []
 this.$queue.enqueue({ foo: "bar" });
@@ -168,14 +169,14 @@ this.$queue.bar.dequeue(); // { bar: "baz" }
 this.$queue.bar; // [{ foo: "bar" }]
 
 // enqueueing an item either from the $queue property or
-// through a queues enqueue action will return a promise that
-// will get resolved once it gets resolved (with the item as the value it resovles with)
-Array(3).keys.forEach(i => this.$queue.enqueue(i).then(val => console.log(`dequeued ${val}`)));
+// through calling the action directly will return a promise that
+// will get resolved once it gets dequeued (with the item as the value it resovles with)
+Array(3).keys.forEach(i =>
+  this.$queue.enqueue(i).then(val => console.log(`dequeued ${val}`)),
+);
+
 this.$queue.bar.dequeue(); // 0
 this.$queue.bar.dequeue(); // 1
-// console will have output:
-// dequeued 0
-// dequeued 1
 this.$queue.bar.dequeue(); // 2
 // and now console will have output:
 // dequeued 0
