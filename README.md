@@ -90,14 +90,18 @@ Vue.use(Queuex);
 
 // in a component
 // get the global queue and enqueue/dequeu items
-this.$queue // [...]
+this.$queue; // []
 this.$queue.enqueue({ foo: "bar" }); // Promise (resolves when it is dequeued)
-this.$queue.dequeue() // { foo: "bar" }
+this.$queue; // [{ foo: "bar" }]
+this.$queue.dequeue(); // { foo: "bar" }
+this.$queue; // []
 
 // named queue
-this.$queue.foo
+this.$queue.foo; // []
 this.$queue.foo.enqueue({ foo: "bar" });
+this.$queue.foo; // [{ foo: "bar" }]
 this.$queue.foo.dequeue() // { foo: "bar" }
+this.$queue.foo; // []
 
 // priority queue
 this.$queue.bar;
@@ -106,4 +110,5 @@ this.$queue.bar; // [{ foo: "bar" }]
 this.$queue.bar.enqueue({ bar: "baz", priority: "high" });
 this.$queue.bar; // [{ bar: "baz" }, { foo: "bar" }]
 this.$queue.bar.dequeue(); // { bar: "baz" }
+this.$queue.bar; // [{ foo: "bar" }]
 ```
