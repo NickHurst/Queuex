@@ -5,7 +5,8 @@
 A Vuex plugin for creating store modules that function as queues. Currently
 supports one global queue (can be disabled), the ability to create named queues
 (seperate namespaced modules), as well as priority queues with configurable
-priorities.
+priorities. You can also subscribe to a queue to get notified when something has
+been enqueued and/or dequeued.
 
 Basic Usage (as of right now):
 
