@@ -91,7 +91,7 @@ Vue.use(Queuex);
 // in a component
 // get the global queue and enqueue/dequeu items
 this.$queue; // []
-this.$queue.enqueue({ foo: "bar" }); // Promise (resolves when it is dequeued)
+this.$queue.enqueue({ foo: "bar" });
 this.$queue; // [{ foo: "bar" }]
 this.$queue.dequeue(); // { foo: "bar" }
 this.$queue; // []
@@ -111,4 +111,19 @@ this.$queue.bar.enqueue({ bar: "baz", priority: "high" });
 this.$queue.bar; // [{ bar: "baz" }, { foo: "bar" }]
 this.$queue.bar.dequeue(); // { bar: "baz" }
 this.$queue.bar; // [{ foo: "bar" }]
+
+// enqueueing an item either from the $queue property or
+// through a queues enqueue action will return a promise that
+// will get resolved once it gets resolved (with the item as the value it resovles with)
+Array(3).keys.forEach(i => this.$queue.enqueue(i).then(val => console.log(`dequeued ${val}`)));
+this.$queue.bar.dequeue(); // 0
+this.$queue.bar.dequeue(); // 1
+// console will have output:
+// dequeued 0
+// dequeued 1
+this.$queue.bar.dequeue(); // 2
+// and now console will have output:
+// dequeued 0
+// dequeued 1
+// dequeued 2
 ```
