@@ -6,8 +6,9 @@ supports one global (root) queue (can be disabled), the ability to create named 
 priorities.
 
 **If you came across this and for some reason want to start using it -- don't.
-It technically "works", but this is mostly just a PoC and is but still early in
-(slow) development and these docs aren't likely 100% accurate.**
+It technically "works" in the current state, but this is mostly just a PoC and
+is but still early in (a slow but sure) development and these docs aren't likely
+100% accurate.**
 
 Basic Usage (as of right now):
 
