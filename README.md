@@ -90,7 +90,7 @@ queuex module:
 ```js
 // add the plugin without any queues (not even the global queue)
 export default new Vuex.Store({
-  plugins: [new Queuex.Store()],
+  plugins: [new Queuex.Store({ globalQueue: false })],
 });
 
 // then is some part of the app where you'll need a queue
