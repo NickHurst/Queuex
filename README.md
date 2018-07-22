@@ -56,11 +56,11 @@ The stores state tree would then look like this:
 
 ```js
 {
-  queue: {
+  qx: {
     queues: {
-      foo: "queue/foo",
-      bar: "queue/bar",
-      baz: "queue/baz",
+      foo: "qx/foo",
+      bar: "qx/bar",
+      baz: "qx/baz",
     },
     root: {
       queue: [],
@@ -111,10 +111,10 @@ export default new Vuex.Store({
 });
 
 // then is some part of the app where you'll need a queue
-this.$store.dispatch("queue/register", { name: "tmp", prioritized: true });
+this.$store.dispatch("qx/register", { name: "tmp", prioritized: true });
 // then do some processing with it, and when done you can remove the
 // queue module entirely
-this.$store.dispatch("queue/unregister", { name: "tmp" });
+this.$store.dispatch("qx/unregister", { name: "tmp" });
 ```
 
 ### Using the Queues
@@ -125,15 +125,15 @@ do exactly what you'd expect.
 ```js
 // whatever you want to be enqueued must be set to the item
 // property of the payload
-this.$store.dispatch("queue/enqueue", { item: { foo: true } });
-this.$store.dispatch("queue/dequeue"); // { foo: true }
+this.$store.dispatch("qx/enqueue", { item: { foo: true } });
+this.$store.dispatch("qx/dequeue"); // { foo: true }
 
 // if the queue is a priority queue you can pass a priority
 // otherwise whatever is set as the default will be used
-this.$store.dispatch("queue/bar/enqueue", { item: { foo: true }, priority: "high" });
+this.$store.dispatch("qx/bar/enqueue", { item: { foo: true }, priority: "high" });
 
 // you can also use the mapActions helpers too
-{ ...mapActions("queue/foo", { enqueueFoo: "enqueue" }) }
+{ ...mapActions("qx/foo", { enqueueFoo: "enqueue" }) }
 ```
 
 Enqueuing something will return a Promise that gets resolved when that item
@@ -145,7 +145,7 @@ possibly implement a throttled request queue:
   actions: {
     async someAction({ commit, dispatch }, { params }) {
       const request = () => fetch("/some/api", { params });
-      await dispatch("queue/requests/enqueue", { item: request, priority: "low" }, { root: true });
+      await dispatch("qx/requests/enqueue", { item: request, priority: "low" }, { root: true });
 
       // the request has been dequeued so now it can be actually called
       const data = await request();
@@ -159,7 +159,7 @@ possibly implement a throttled request queue:
 // ...and meanwhile somewhere else -- don't do this btw
 const requestQueueThrottle = (store, throttle = 300) =>
   new Promise(resolve => setTimeout(resolve, throttle))
-        .then(() => store.dispatch("queue/requests/dequeue"))
+        .then(() => store.dispatch("qx/requests/dequeue"))
         .then(() => requestQueueThrottle(store, throttle));
 ```
 
@@ -169,15 +169,15 @@ You can also subscribe to a queue to get notified when something has
 been enqueued and/or dequeued.
 
 ```js
-this.$store.dispatch("queue/foo/subscribe", {
+this.$store.dispatch("qx/foo/subscribe", {
   enqueue: payload => console.log(`${payload} enqueued`),
   dequeue: payload => console.log(`${payload} dequeued`),
 });
 
-this.$store.dispatch("queue/foo/enqueue", { item: "foo" });
+this.$store.dispatch("qx/foo/enqueue", { item: "foo" });
 // console: "{ item: 'foo' } enqueued"
 
-this.$store.dispatch("queue/foo/dequeue");
+this.$store.dispatch("qx/foo/dequeue");
 // console: "{ item: 'foo' } dequeued"
 ```
 
