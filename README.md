@@ -105,7 +105,7 @@ registered/destroyed at anypoint by invoking the `register/unregister` actions o
 queuex module:
 
 ```js
-// add the plugin without any queues (not even the global queue)
+// this will add the plugin without any queues to start
 export default new Vuex.Store({
   plugins: [Queuex.Store({ rootQueue: false })],
 });
@@ -156,7 +156,7 @@ possibly implement a throttled request queue:
   },
 },
 
-// and meanwhile somewhere else -- don't do this btw
+// ...and meanwhile somewhere else -- don't do this btw
 const requestQueueThrottle = (store, throttle = 300) =>
   new Promise(resolve => setTimeout(resolve, throttle))
         .then(() => store.dispatch("queue/requests/dequeue"))
