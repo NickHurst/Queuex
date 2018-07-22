@@ -31,12 +31,13 @@ export const registerRoot = (store, { namespace, rootQueue }) => {
 
     if (path === namespace) {
       if (mutation === 'register') {
-        const { name, ...options } = payload;
-        const register = options.priority
+        const { name, prioritized = false } = payload;
+        const options = typeof prioritized === 'object' ? prioritized : {}
+        const register = prioritized
           ? registerPriorityQueue
           : registerQueue;
 
-        return register(store, { name, namespace, ...options })
+        return register(store, { name, namespace, ...options });
       }
 
       if (mutation === 'unregister') {

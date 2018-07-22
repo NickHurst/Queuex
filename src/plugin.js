@@ -1,5 +1,5 @@
 import { getModuleState } from '@/utils/module';
-import { registerRoot } from './modules';
+import { registerRoot } from './store/modules';
 
 const DEFAULT_OPTIONS = {
   queues: [],
@@ -8,7 +8,7 @@ const DEFAULT_OPTIONS = {
   namespaceRootQueue: false,
 };
 
-export const plugin = (options = {}) => {
+export default (options = {}) => {
   const { namespace, queues, rootQueue, namespaceRootQueue } =
     { ...DEFAULT_OPTIONS,...options };
 

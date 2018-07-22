@@ -23,7 +23,7 @@ import Queuex from "queuex";
 Vue.use(Vuex);
 Vue.use(Queuex); // optional -- see below
 
-const queuex = Queuex.Store({
+const queuex = Queuex.Plugin({
   // set queues to create when the store starts
   // this is optional and can be left out
   // queues can be added/removed at any time -- see below
@@ -107,7 +107,7 @@ queuex module:
 ```js
 // this will add the plugin without any queues to start
 export default new Vuex.Store({
-  plugins: [Queuex.Store({ rootQueue: false })],
+  plugins: [Queuex.Plugin({ rootQueue: false })],
 });
 
 // then is some part of the app where you'll need a queue

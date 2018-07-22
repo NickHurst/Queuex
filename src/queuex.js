@@ -1,13 +1,5 @@
-import { proxy } from './proxy';
-import { plugin } from './vuex';
+import install from './install';
+import Plugin from './plugin';
+import store from './store';
 
-export default {
-  install: (Vue, opts = {}) => {
-    Vue.mixin({
-      beforeCreate() {
-        this.$qx = proxy(this.$store || this.$options.store);
-      },
-    });
-  },
-  Store: plugin,
-};
+export default { install, Plugin, ...store };

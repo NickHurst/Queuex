@@ -1,4 +1,4 @@
-import { buildQueue, registerQueue } from '@/vuex/modules/queue';
+import { buildQueue, registerQueue, queueModule } from '@/vuex/modules/queue';
 
 describe('buildQueue', () => {
   test('schema', () => {
@@ -18,8 +18,7 @@ describe('buildQueue', () => {
 });
 
 describe('store module', () => {
-  const queue = buildQueue({});
-  const { state, getters, mutations, actions } = queue;
+  const { state, getters, mutations, actions } = queueModule;
 
   test('state', () => {
     expect(state).toMatchObject({ queue: [], itemSeq: 0 });

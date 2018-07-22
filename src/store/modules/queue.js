@@ -1,8 +1,7 @@
 import { mergeOptions } from '@/utils/module';
-import { subscriptionsMixin as subscriptions } from './subscriptions-mixin';
+import { subscribable } from '../mixins/subscribable';
 
-export const buildQueue = ({ namespaced = true }) => mergeOptions(subscriptions, {
-  namespaced,
+export const queueModule = {
   state: {
     queue: [],
     itemSeq: 0,
@@ -37,7 +36,10 @@ export const buildQueue = ({ namespaced = true }) => mergeOptions(subscriptions,
       return item;
     },
   },
-});
+};
+
+const buildQueue = ({ namespaced = true }) =>
+  mergeOptions(subscribable, { ...queueModule, namespaced });
 
 export const registerQueue = (store, { namespace, name, ...options }) => {
   const path = [...namespace.split('/'), name];
