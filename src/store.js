@@ -3,8 +3,9 @@ import Vuex from 'vuex';
 import Queuex from './queuex';
 
 Vue.use(Vuex);
+Vue.use(Queuex);
 
-const queue = new Queuex.Store({
+const queue = Queuex.Store({
   queues: [
     { name: 'foo' },
     {

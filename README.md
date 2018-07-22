@@ -21,25 +21,34 @@ import Vuex from "vuex";
 import Queuex from "queuex";
 
 Vue.use(Vuex);
+Vue.use(Queuex); // optional -- see below
 
-const queue = new Queuex.Store({
+const queuex = Queuex.Store({
+  // set queues to create when the store starts
+  // this is optional and can be left out
+  // queues can be added/removed at any time -- see below
   queues: [
-    { name: "foo" },
-    {
-      name: "bar",
-      prioritized: true,
-    },
+    // plain queue (or { name: "foo" })
+    "foo",
+    // priority queue
+    { name: "bar", prioritized: true },
+    // priority queue with custom priorities
     {
       name: "baz",
-      prioritized: true,
-      priorities: ["a", "b", "c"],
-      default: "c",
+      prioritized: {
+        queues: ["a", "b", "c"],
+        defaultQueue: "c",
+      },
     },
-  ]
+  ],
+  // default -- creates a queue at the top of the plugin namespace
+  rootQueue: true,
+  // default -- keeps the root queue but puts it in the "root" namespace
+  namespaceRootQueue: false,
 });
 
 export default new Vuex.Store({
-  plugins: [queue],
+  plugins: [queuex],
 });
 ```
 
@@ -48,12 +57,11 @@ The stores state tree would then look like this:
 ```js
 {
   queue: {
-    // queue module path registry
-    queues: { foo: "queue/foo", bar: "queue/bar", baz: "queue/baz", },
-    // the global or root queue, even though the module is namespaced
-    // it's actions/getters/state are proxied by the actual root module
-    // this queue can't be removed and will be created by default --
-    // passing { rootQueue: false } to the Queuex.Store options will disable it
+    queues: {
+      foo: "queue/foo",
+      bar: "queue/bar",
+      baz: "queue/baz",
+    },
     root: {
       queue: [],
     },
@@ -63,8 +71,6 @@ The stores state tree would then look like this:
     bar: {
       queues: ["high", "default", "low"],
       defaultQueue: "default",
-      // these are the same as regular queue modules
-      // except will get pulled by priority by parent module (bar)
       high: {
         queue: [],
       },
@@ -101,7 +107,7 @@ queuex module:
 ```js
 // add the plugin without any queues (not even the global queue)
 export default new Vuex.Store({
-  plugins: [new Queuex.Store({ rootQueue: false })],
+  plugins: [Queuex.Store({ rootQueue: false })],
 });
 
 // then is some part of the app where you'll need a queue
@@ -150,7 +156,7 @@ possibly implement a throttled request queue:
   },
 },
 
-// somewhere else
+// and meanwhile somewhere else -- don't do this btw
 const requestQueueThrottle = (store, throttle = 300) =>
   new Promise(resolve => setTimeout(resolve, throttle))
         .then(() => store.dispatch("queue/requests/dequeue"))
@@ -164,18 +170,12 @@ been enqueued and/or dequeued.
 
 ```js
 this.$store.dispatch("queue/foo/subscribe", {
-  mutation: "enqueue",
-  handler: payload => console.log(`${payload} enqueued`),
+  enqueue: payload => console.log(`${payload} enqueued`),
+  dequeue: payload => console.log(`${payload} dequeued`),
 });
 
 this.$store.dispatch("queue/foo/enqueue", { item: "foo" });
 // console: "{ item: 'foo' } enqueued"
-
-// or you can subscribe to dequeues
-this.$store.dispatch("queue/foo/subscribe", {
-  mutation: "dequeue",
-  handler: payload => console.log(`${payload} dequeued`),
-});
 
 this.$store.dispatch("queue/foo/dequeue");
 // console: "{ item: 'foo' } dequeued"
@@ -183,47 +183,55 @@ this.$store.dispatch("queue/foo/dequeue");
 
 ### Component Plugin (optional)
 
-The component plugin can be added as well which will add the `$queue`
-property. This is just a proxy to the queue namespace on `$store.state`
-with `enqueue` & `dequeue` methods added that are just aliases of the
-actions:
+The component plugin can be added `Vue.use(Queuex)` which will add the
+`$qx` property to components. This just provides an alternative api to
+interact with the queue modules rather than manipulating the queues through
+actions/mutations which can get verbose, so`$qx` provides a less verbose
+wrapper.
 
 ```js
-Vue.use(Queuex);
+// the root queue
+this.$qx; // []
+this.$qx.enqueue("foo");
+this.$qx; // ["foo"]
+this.$qx.dequeue();
+this.$qx; // []
 
-// then in some component
-export default {
-  // omitted...
-  created() {
-    // get the global queue and enqueue/dequeu items
-    this.$queue; // []
-    // same as store.dispatch("queue/enqueue", { item: { foo: "bar" } })
-    this.$queue.enqueue({ item: "foo" }); // Promise
-    this.$queue; // ["foo"]
-    this.$queue.dequeue(); // "foo"
-    this.$queue; // []
+// view the next item without dequeuing it
+this.$qx.peek
 
-    // named queue
-    this.$queue.foo; // []
-    this.$queue.foo.enqueue({ item: "foo" }); // Promise
-    this.$queue.foo; // ["foo"]
-    this.$queue.foo.dequeue() // "foo"
-    this.$queue.foo; // []
+// subscribing to a queue
+this.$qx.on("enqueue", payload => payload);
+this.$qx.on("dequeue", payload => payload);
 
-    // priority queue
-    this.$queue.bar; // []
-    this.$queue.bar.enqueue({ item: "default" }); // Promise
-    this.$queue.bar; // ["default"]
-    this.$queue.bar.enqueue({ item: "high", priority: "high" }); // Promise
-    this.$queue.bar; // ["high", "default"]
-    this.$queue.bar.enqueue({ item: "low", priority: "low" }); // Promise
-    this.$queue.bar; // ["high", "default", "low"]
-    this.$queue.bar.dequeue(); // "high"
-    this.$queue.bar; // ["default", "low"]
-    this.$queue.bar.dequeue(); // "default"
-    this.$queue.bar; // ["low"]
-    this.$queue.bar.dequeue(); // "low"
-    this.$queue.bar; // []
-  },
-};
+// creating a queue
+this.$qx.add("tmp");
+// and removing it
+this.$qx.remove("tmp");
+
+// to access other queues just access them
+// by their name ($qx.queueName) all the above
+// methods available on them except for add/remove
+
+// named queue
+this.$qx.foo; // []
+this.$qx.foo.enqueue("foo");
+this.$qx.foo; // ["foo"]
+this.$qx.foo.dequeue();
+this.$qx.foo; // []
+
+// priority queue
+this.$qx.bar; // []
+this.$qx.bar.enqueue("default");
+this.$qx.bar; // ["default"]
+this.$qx.bar.high.enqueue("high");
+this.$qx.bar; // ["high", "default"]
+this.$qx.bar.low.enqueue("low");
+this.$qx.bar; // ["high", "default", "low"]
+this.$qx.bar.dequeue();
+this.$qx.bar; // ["default", "low"]
+this.$qx.bar.dequeue();
+this.$qx.bar; // ["low"]
+this.$qx.bar.dequeue();
+this.$qx.bar; // []
 ```

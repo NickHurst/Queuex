@@ -5,13 +5,9 @@ export default {
   install: (Vue, opts = {}) => {
     Vue.mixin({
       beforeCreate() {
-        this.$queue = proxy(this.$store || this.$options.store);
+        this.$qx = proxy(this.$store || this.$options.store);
       },
     });
   },
-  Store: new Proxy(plugin, {
-    construct(target, args) {
-      return target(...args);
-    },
-  }),
+  Store: plugin,
 };

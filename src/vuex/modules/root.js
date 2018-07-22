@@ -17,7 +17,7 @@ export const registerRoot = (store, { namespace, rootQueue }) => {
         state.queues = { ...state.queues, [name]: { ...options, path } };
       },
       unregister(state, { name }) {
-        if (name === 'global') return;
+        if (name === 'root') return;
 
         const { [name]: _deleted, ...queues } = state.queues;
         state.queues = queues;
